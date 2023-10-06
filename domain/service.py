@@ -1,7 +1,8 @@
 import logging
+from typing import Tuple, Union
 
 from domain.interface import Repository
-from domain.dataclasses import BodyInfo, PerevalInfo, ImageInfo, CoordsInfo, UserInfo, LevelInfo
+from domain.dataclasses import BodyInfo, PerevalInfo
 
 
 class MobileTourist:
@@ -47,6 +48,43 @@ class MobileTourist:
 			)
 		self.logger.info('User by user_id = %s added new data' % user_id)
 		return data_id
+
+	def edit_pereval_data(self, pereval_id: int, body: BodyInfo) -> Tuple[int, Union[str, None]]:
+		old_pereval = self.repo.get_pereval(pereval_id=pereval_id)
+		if old_pereval is None:
+			return 0, 'No pereval with id %s' % pereval_id
+		if old_pereval.status is True:
+			return 0, 'Pereval has already been approved'
+
+		user = self.repo.get_user_by_phone(body.user.phone)
+		if user is None or user.email != body.user.email or\
+					user.name != body.user.name or\
+					user.fam != body.user.fam or\
+					user.otc != body.user.otc:
+			return 0, 'Personal Data Error'
+
+		self.repo.edit_pereval(
+			pereval_id=pereval_id,
+			pereval={
+				'beauty_title': body.beauty_title,
+				'title': body.title,
+				'other_titles': body.other_titles,
+				'connect': body.connect
+			}
+		)
+		self.repo.edit_coords(coords_id=old_pereval.coords_id, coords=body.coords.dict())
+		self.repo.edit_levels(levels_id=old_pereval.level_id, levels=body.level.dict())
+		self.repo.edit_imgs(
+			pereval_id=pereval_id,
+			images=[
+				{
+					'img': image.img,
+					'title': image.title,
+				} for image in body.images
+			]
+		)
+		return 1, None
+
 
 	def get_pereval_data(self, pereval_id: int) -> BodyInfo:
 		pereval = self.repo.get_pereval(pereval_id=pereval_id)

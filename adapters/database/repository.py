@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Optional, Dict, List
+from datetime import datetime, date
+from typing import Optional, Dict, List, Any, Union
 
 from sqlalchemy import (
 	MetaData,
@@ -14,9 +14,11 @@ from sqlalchemy import (
 	Float,
 	insert,
 	select,
+	update,
+	delete,
 	func,
 )
-from sqlalchemy.orm import registry, relationship
+from sqlalchemy.orm import registry
 
 from domain import interface, dataclasses
 
@@ -167,3 +169,68 @@ class Repository(interface.Repository):
 		query = select(dataclasses.Level).where(dataclasses.Level.id == level_id)
 		row = self.engine.execute(query).one_or_none()
 		return dataclasses.Level(**row) if row is not None else None
+
+	def edit_pereval(self, pereval_id: int, pereval: Dict[str, str]) -> None:
+		query = update(
+			dataclasses.PerevalAdded
+		).where(
+			dataclasses.PerevalAdded.id == pereval_id
+		).values(**pereval)
+		self.engine.execute(query)
+
+	def edit_imgs(self, pereval_id: int, images: List[Dict[str, Any]]) -> None:
+		old_img_ids = self.engine.execute(
+			select(dataclasses.Image.id).where(dataclasses.Image.pereval_id == pereval_id)
+		).scalars().all()
+
+		len_list_old_img = len(old_img_ids)
+
+		for index_new_img in range(len(images)):
+			if index_new_img < len_list_old_img:
+				query = update(
+					dataclasses.Image
+				).where(
+					dataclasses.Image.id == old_img_ids[index_new_img]
+				).values(
+					img=images[index_new_img]['img'],
+					title=images[index_new_img]['title'],
+					date_added=date.today()
+				)
+			else:
+				query = insert(
+					dataclasses.Image
+				).values(
+					img=images[index_new_img]['img'],
+					title=images[index_new_img]['title'],
+					pereval_id=pereval_id,
+					date_added=date.today()
+				)
+			self.engine.execute(query)
+
+		if not len(images):
+			index_new_img = 0
+
+		if len_list_old_img < index_new_img:
+			for index in range(index_new_img, len_list_old_img):
+				query = delete(
+					dataclasses.Image
+				).where(
+					dataclasses.Image.id == old_img_ids[index]
+				)
+				self.engine.execute(query)
+
+	def edit_coords(self, coords_id: int, coords: Dict[str, Union[float, int]]) -> None:
+		query = update(
+			dataclasses.Coords
+		).where(
+			dataclasses.Coords.id == coords_id
+		).values(**coords)
+		self.engine.execute(query)
+
+	def edit_levels(self, levels_id: int, levels: Dict[str, str]) -> None:
+		query = update(
+			dataclasses.Level
+		).where(
+			dataclasses.Level.id == levels_id
+		).values(**levels)
+		self.engine.execute(query)
