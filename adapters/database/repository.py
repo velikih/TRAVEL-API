@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from sqlalchemy import (
+	MetaData,
 	DateTime,
 	Date,
 	Boolean,
@@ -10,7 +11,6 @@ from sqlalchemy import (
 	Column,
 	ForeignKey,
 	Table,
-	MetaData,
 	Float,
 	insert,
 	select,
@@ -20,20 +20,12 @@ from sqlalchemy.orm import registry, relationship
 
 from domain import interface, dataclasses
 
-naming_convention = {
-	'ix': 'ix_%(column_0_label)s',
-	'uq': 'uq_%(table_name)s_%(column_0_name)s',
-	'ck': 'ck_%(table_name)s_%(constraint_name)s',
-	'fk': 'fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s',
-	'pk': 'pk_%(table_name)s'
-}
-
-# даем имя схемы только для БД MSSQL, связано с инфраструктурными особенностями
-metadata = MetaData(naming_convention=naming_convention)
+metadata = MetaData()
+mapper = registry(metadata=metadata)
 
 users = Table(
 	'users',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('email', Unicode(255), nullable=True),
 	Column('fam', Unicode(255), nullable=False),
@@ -44,7 +36,7 @@ users = Table(
 
 coords = Table(
 	'coords',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('latitude', Float, nullable=False),
 	Column('longitude', Float, nullable=False),
@@ -53,7 +45,7 @@ coords = Table(
 
 levels = Table(
 	'levels',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('winter', Unicode(255), nullable=False),
 	Column('summer', Unicode(255), nullable=False),
@@ -63,7 +55,7 @@ levels = Table(
 
 images = Table(
 	'images',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('img', Unicode, nullable=False),
 	Column('title', Unicode(255), nullable=False),
@@ -73,7 +65,7 @@ images = Table(
 
 pereval_added = Table(
 	'pereval_added',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('date_added', Date, server_default=func.now()),
 	Column('beauty_title', Unicode(255), nullable=False),
@@ -89,7 +81,7 @@ pereval_added = Table(
 
 pereval_areas = Table(
 	'pereval_areas',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('id_parent', Integer, nullable=False),
 	Column('title', Integer, nullable=False),
@@ -97,48 +89,23 @@ pereval_areas = Table(
 
 spr_activities_types = Table(
 	'spr_activities_types',
-	metadata,
+	mapper.metadata,
 	Column('id', Integer, primary_key=True),
 	Column('title', Integer, nullable=False),
 )
 
-mapper = registry()
 
 mapper.map_imperatively(dataclasses.User, users)
 mapper.map_imperatively(dataclasses.Coords, coords)
 mapper.map_imperatively(dataclasses.Level, levels)
 mapper.map_imperatively(
 	dataclasses.PerevalAdded,
-	pereval_added,
-	properties={
-		'user': relationship(
-			dataclasses.User,
-			backref='data',
-			lazy='joined',
-		),
-		'coords': relationship(
-			dataclasses.Coords,
-			backref='data',
-			lazy='joined',
-		),
-		'levels': relationship(
-			dataclasses.Level,
-			backref='data',
-			lazy='joined',
-		)
-	}
+	pereval_added
 )
 
 mapper.map_imperatively(
 	dataclasses.Image,
-	images,
-	properties={
-		'pereval': relationship(
-			dataclasses.PerevalAdded,
-			backref='images',
-			lazy='joined',
-		)
-	}
+	images
 )
 
 
@@ -175,3 +142,28 @@ class Repository(interface.Repository):
 		query = select(dataclasses.User).where(dataclasses.User.phone == user_phone)
 		row = self.engine.execute(query).one_or_none()
 		return dataclasses.User(**row) if row is not None else None
+
+	def get_pereval(self, pereval_id: int) -> Optional[dataclasses.PerevalAdded]:
+		query = select(dataclasses.PerevalAdded).where(dataclasses.PerevalAdded.id == pereval_id)
+		row = self.engine.execute(query).one_or_none()
+		return dataclasses.PerevalAdded(**row) if row is not None else None
+
+	def get_imgs_by_pereval_id(self, pereval_id: int) -> List[dataclasses.Image]:
+		query = select(dataclasses.Image).where(dataclasses.Image.pereval_id == pereval_id)
+		rows = self.engine.execute(query).all()
+		return [dataclasses.Image(**row) for row in rows]
+
+	def get_coords_by_id(self, coords_id: int) -> Optional[dataclasses.Coords]:
+		query = select(dataclasses.Coords).where(dataclasses.Coords.id == coords_id)
+		row = self.engine.execute(query).one_or_none()
+		return dataclasses.Coords(**row) if row is not None else None
+
+	def get_user_by_id(self, user_id: int) -> Optional[dataclasses.User]:
+		query = select(dataclasses.User).where(dataclasses.User.id == user_id)
+		row = self.engine.execute(query).one_or_none()
+		return dataclasses.User(**row) if row is not None else None
+
+	def get_levels_by_id(self, level_id: int) -> Optional[dataclasses.Level]:
+		query = select(dataclasses.Level).where(dataclasses.Level.id == level_id)
+		row = self.engine.execute(query).one_or_none()
+		return dataclasses.Level(**row) if row is not None else None

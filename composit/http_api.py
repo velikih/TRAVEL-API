@@ -13,7 +13,7 @@ class Settings:
 
 class DB:
     engine = create_engine(Settings.db.DB_URL)
-    database.metadata.create_all(engine)
+    database.mapper.metadata.create_all(engine)
     repository = database.repository.Repository(engine=engine)
 
 

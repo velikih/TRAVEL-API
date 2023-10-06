@@ -1,7 +1,7 @@
 import logging
 
 from domain.interface import Repository
-from domain.dataclasses import BodyInfo
+from domain.dataclasses import BodyInfo, PerevalInfo, ImageInfo, CoordsInfo, UserInfo, LevelInfo
 
 
 class MobileTourist:
@@ -47,3 +47,43 @@ class MobileTourist:
 			)
 		self.logger.info('User by user_id = %s added new data' % user_id)
 		return data_id
+
+	def get_pereval_data(self, pereval_id: int) -> BodyInfo:
+		pereval = self.repo.get_pereval(pereval_id=pereval_id)
+		images = self.repo.get_imgs_by_pereval_id(pereval_id=pereval.id)
+		coords = self.repo.get_coords_by_id(coords_id=pereval.coords_id)
+		user = self.repo.get_user_by_id(user_id=pereval.user_id)
+		levels = self.repo.get_levels_by_id(level_id=pereval.level_id)
+		return PerevalInfo(
+			beauty_title=pereval.beauty_title,
+			title=pereval.title,
+			other_titles=pereval.other_titles,
+			connect=pereval.connect,
+			add_time=pereval.add_time,
+			user={
+				'email': user.email,
+				'fam': user.fam,
+				'name': user.name,
+				'otc': user.otc,
+				'phone': user.phone
+			},
+			coords={
+				'latitude': coords.latitude,
+				'longitude': coords.longitude,
+				'height': coords.height
+			},
+			level={
+				'winter': levels.winter,
+				'summer': levels.summer,
+				'autumn': levels.autumn,
+				'spring': levels.spring
+			},
+			images=[
+				{
+					'img': image.img,
+					'title': image.title,
+				} for image in images
+			],
+			status=pereval.status
+		)
+
