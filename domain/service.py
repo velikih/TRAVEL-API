@@ -1,7 +1,7 @@
 import logging
 
 from domain.interface import Repository
-from domain.dataclasses import BodyInfo, Coords, Level, Image, User, Data
+from domain.dataclasses import BodyInfo
 
 
 class MobileTourist:
@@ -13,7 +13,7 @@ class MobileTourist:
 		self.repo = repository
 		self.logger = logger
 
-	def add_data(self, body: BodyInfo):
+	def add_data(self, body: BodyInfo) -> int:
 		coords_id = self.repo.add_coords(body.coords.dict())
 
 		level_id = self.repo.add_level(body.level.dict())
@@ -40,9 +40,10 @@ class MobileTourist:
 		for image in body.images:
 			self.repo.add_image(
 				{
-					'image': image.data,
+					'img': image.img,
 					'title': image.title,
-					'data_id': data_id
+					'pereval_id': data_id
 				}
 			)
 		self.logger.info('User by user_id = %s added new data' % user_id)
+		return data_id
