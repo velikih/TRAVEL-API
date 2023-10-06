@@ -27,9 +27,6 @@ class Application:
 app = Application()
 
 if __name__ == '__main__':
-    from wsgiref import simple_server
+    import uvicorn
 
-    with simple_server.make_server(host='127.0.0.1', port=8081, app=Application.app) as server:
-        print('server with port 8081')
-        server.serve_forever()
-
+    uvicorn.run(app.app, host='127.0.0.1', port=8000)

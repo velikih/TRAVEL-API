@@ -3,6 +3,8 @@ from typing import Optional, Dict
 
 from sqlalchemy import (
 	DateTime,
+	Date,
+	Boolean,
 	Integer,
 	Unicode,
 	Column,
@@ -12,6 +14,7 @@ from sqlalchemy import (
 	Float,
 	insert,
 	select,
+	func,
 )
 from sqlalchemy.orm import registry, relationship
 
@@ -62,15 +65,17 @@ images = Table(
 	'images',
 	metadata,
 	Column('id', Integer, primary_key=True),
-	Column('image', Unicode(255), nullable=False),
+	Column('img', Unicode, nullable=False),
 	Column('title', Unicode(255), nullable=False),
-	Column('data_id', Integer, ForeignKey('data.id'), nullable=False),
+	Column('pereval_id', Integer, ForeignKey('pereval_added.id'), nullable=False),
+	Column('date_added', Date, server_default=func.now()),
 )
 
-data = Table(
-	'data',
+pereval_added = Table(
+	'pereval_added',
 	metadata,
 	Column('id', Integer, primary_key=True),
+	Column('date_added', Date, server_default=func.now()),
 	Column('beauty_title', Unicode(255), nullable=False),
 	Column('title', Unicode(255), nullable=False),
 	Column('other_titles', Unicode(255), nullable=False),
@@ -79,6 +84,22 @@ data = Table(
 	Column('user_id', Integer, ForeignKey('users.id'), nullable=False),
 	Column('coords_id', Integer, ForeignKey('coords.id'), nullable=False),
 	Column('level_id', Integer, ForeignKey('levels.id'), nullable=False),
+	Column('status', Boolean, default=False),
+)
+
+pereval_areas = Table(
+	'pereval_areas',
+	metadata,
+	Column('id', Integer, primary_key=True),
+	Column('id_parent', Integer, nullable=False),
+	Column('title', Integer, nullable=False),
+)
+
+spr_activities_types = Table(
+	'spr_activities_types',
+	metadata,
+	Column('id', Integer, primary_key=True),
+	Column('title', Integer, nullable=False),
 )
 
 mapper = registry()
@@ -87,8 +108,8 @@ mapper.map_imperatively(dataclasses.User, users)
 mapper.map_imperatively(dataclasses.Coords, coords)
 mapper.map_imperatively(dataclasses.Level, levels)
 mapper.map_imperatively(
-	dataclasses.Data,
-	data,
+	dataclasses.PerevalAdded,
+	pereval_added,
 	properties={
 		'user': relationship(
 			dataclasses.User,
@@ -107,12 +128,13 @@ mapper.map_imperatively(
 		)
 	}
 )
+
 mapper.map_imperatively(
 	dataclasses.Image,
 	images,
 	properties={
-		'data': relationship(
-			dataclasses.Data,
+		'pereval': relationship(
+			dataclasses.PerevalAdded,
 			backref='images',
 			lazy='joined',
 		)
@@ -125,7 +147,7 @@ class Repository(interface.Repository):
 		self.engine = engine
 
 	def add_data(self, data_for_add: Dict) -> int:
-		query = insert(dataclasses.Data, data_for_add)
+		query = insert(dataclasses.PerevalAdded, data_for_add)
 		result = self.engine.execute(query)
 		return result.inserted_primary_key[0]
 
@@ -151,4 +173,5 @@ class Repository(interface.Repository):
 
 	def get_user_by_phone(self, user_phone: str) -> Optional[dataclasses.User]:
 		query = select(dataclasses.User).where(dataclasses.User.phone == user_phone)
-		return self.engine.execute(query).scalars().one_or_none()
+		row = self.engine.execute(query).one_or_none()
+		return dataclasses.User(**row) if row is not None else None
