@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 from domain.interface import Repository
 from domain.dataclasses import BodyInfo, PerevalInfo
@@ -125,3 +125,48 @@ class MobileTourist:
 			status=pereval.status
 		)
 
+	# def get_by_user(self, user_email: str) -> List[PerevalInfo]:
+	# 	user = self.repo.get_user_by_email(user_email=user_email)
+	#
+	# 	result = list()
+	# 	perevals = self.repo.get_pereval_by_user_id(user_id=user.id)
+	#
+	# 	for pereval in perevals:
+	# 		images = self.repo.get_imgs_by_pereval_id(pereval_id=pereval.id)
+	# 		coords = self.repo.get_coords_by_id(coords_id=pereval.coords_id)
+	# 		user = self.repo.get_user_by_id(user_id=pereval.user_id)
+	# 		levels = self.repo.get_levels_by_id(level_id=pereval.level_id)
+	# 		result.append(PerevalInfo(
+	# 			beauty_title=pereval.beauty_title,
+	# 			title=pereval.title,
+	# 			other_titles=pereval.other_titles,
+	# 			connect=pereval.connect,
+	# 			add_time=pereval.add_time,
+	# 			user={
+	# 				'email': user.email,
+	# 				'fam': user.fam,
+	# 				'name': user.name,
+	# 				'otc': user.otc,
+	# 				'phone': user.phone
+	# 			},
+	# 			coords={
+	# 				'latitude': coords.latitude,
+	# 				'longitude': coords.longitude,
+	# 				'height': coords.height
+	# 			},
+	# 			level={
+	# 				'winter': levels.winter,
+	# 				'summer': levels.summer,
+	# 				'autumn': levels.autumn,
+	# 				'spring': levels.spring
+	# 			},
+	# 			images=[
+	# 				{
+	# 					'img': image.img,
+	# 					'title': image.title,
+	# 				} for image in images
+	# 			],
+	# 			status=pereval.status
+	# 		))
+	# 	return result
+	#

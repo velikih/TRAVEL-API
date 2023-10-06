@@ -18,7 +18,7 @@ from sqlalchemy import (
 	delete,
 	func,
 )
-from sqlalchemy.orm import registry
+from sqlalchemy.orm import registry, relationship
 
 from domain import interface, dataclasses
 
@@ -234,3 +234,97 @@ class Repository(interface.Repository):
 			dataclasses.Level.id == levels_id
 		).values(**levels)
 		self.engine.execute(query)
+
+	def get_data_by_email(self, user_email: str) -> List[dataclasses.PerevalInfoResponse]:
+		query = select(
+			dataclasses.PerevalAdded.id,
+			dataclasses.PerevalAdded.date_added,
+			dataclasses.PerevalAdded.beauty_title,
+			dataclasses.PerevalAdded.title,
+			dataclasses.PerevalAdded.other_titles,
+			dataclasses.PerevalAdded.connect,
+			dataclasses.PerevalAdded.add_time,
+			dataclasses.PerevalAdded.status,
+			dataclasses.Image.id,
+			dataclasses.Image.title,
+			dataclasses.Image.img,
+			dataclasses.Level.winter,
+			dataclasses.Level.summer,
+			dataclasses.Level.autumn,
+			dataclasses.Level.spring,
+			dataclasses.Coords.latitude,
+			dataclasses.Coords.longitude,
+			dataclasses.Coords.height
+		).join(
+			dataclasses.User, dataclasses.PerevalAdded.user_id == dataclasses.User.id
+		).join(
+			dataclasses.Image, dataclasses.PerevalAdded.id == dataclasses.Image.pereval_id
+		).join(
+			dataclasses.Level, dataclasses.PerevalAdded.level_id == dataclasses.Level.id
+		).join(
+			dataclasses.Coords, dataclasses.PerevalAdded.coords_id == dataclasses.Coords.id
+		).where(dataclasses.User.email == user_email)
+		rows = self.engine.execute(query).all()
+		result = list()
+		for row in rows:
+			obj = self._create_objects(*row)
+			if len(result) and obj.id == result[-1].id:
+				result[-1].images.extend(obj.images)
+			else:
+				result.append(obj)
+		return result
+
+	def _create_objects(
+			self,
+			pereval_id: int,
+			date_added: date,
+			beauty_title: str,
+			pereval_title: str,
+			other_titles: str,
+			connect: str,
+			add_time: datetime,
+			status: bool,
+			img_id: int,
+			img_title: str,
+			img: str,
+			winter: str,
+			summer: str,
+			autumn: str,
+			spring: str,
+			latitude: float,
+			longitude: float,
+			height: int
+	) -> dataclasses.PerevalInfoResponse:
+
+		coords = {
+			'latitude': latitude,
+			'longitude': longitude,
+			'height': height
+		}
+		level = {
+			'winter': winter,
+			'summer': summer,
+			'autumn': autumn,
+			'spring': spring
+		}
+		image = [
+			{
+				'title': img_title,
+				'img': img,
+			}
+		]
+
+		return dataclasses.PerevalInfoResponse(
+			id=pereval_id,
+			date_added=date_added,
+			beauty_title=beauty_title,
+			title=pereval_title,
+			other_titles=other_titles,
+			connect=connect,
+			add_time=add_time,
+			coords=coords,
+			level=level,
+			images=image,
+			status=status
+		)
+

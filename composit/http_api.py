@@ -19,7 +19,7 @@ class DB:
 
 class Application:
     service = service.MobileTourist(repository=DB.repository)
-    controller = http_api.Controller(service)
+    controller = http_api.Controller(service, DB.repository)
     app = FastAPI()
     app.include_router(controller.router)
 
