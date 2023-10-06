@@ -1,2 +1,2 @@
 from .settings import Settings
-from .repository import metadata
+from .repository import mapper
