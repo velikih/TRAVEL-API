@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Response, status
 
 from domain.service import MobileTourist
-from domain.interface import Repository
-from domain.dataclasses import  (
+from domain.interface import PerevalRepository
+from domain.dataclasses import (
 	BodyInfo,
 	PerevalAddedResponse,
 	PerevalsByUserResponse,
@@ -12,7 +12,7 @@ from domain.dataclasses import  (
 
 
 class Controller:
-	def __init__(self, service: MobileTourist, repository: Repository):
+	def __init__(self, service: MobileTourist, repository: PerevalRepository):
 		self.service = service
 		self.repository = repository
 		self.router = APIRouter()
@@ -24,6 +24,7 @@ class Controller:
 			"/submitData/{pereval_id}", self.submit_data_get, methods=["GET"], response_model=PerevalByIdResponse)
 		self.router.add_api_route(
 			"/submitData/{pereval_id}", self.submit_data_patch, methods=["PATCH"], response_model=PerevalUpdateResponse)
+
 	def submit_data_post(self, body: BodyInfo, response: Response):
 		try:
 			id_ = self.service.add_data(body=body)

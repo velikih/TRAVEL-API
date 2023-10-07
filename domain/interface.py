@@ -37,7 +37,7 @@ class ImgRepo(ABC):
 class PerevalRepository(ABC):
 
 	@abstractmethod
-	def add_data(self, data_for_add: Dict):
+	def add_data(self, data_for_add: Dict) -> int:
 		...
 
 	@abstractmethod
@@ -73,5 +73,5 @@ class PerevalRepository(ABC):
 		...
 
 	@abstractmethod
-	def get_data_by_email(self, user_email: str) -> None:
+	def get_data_by_email(self, user_email: str) -> List[dataclasses.PerevalInfoResponse]:
 		...
