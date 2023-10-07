@@ -177,21 +177,21 @@ class PerevalByIdResponse(BaseResponse):
             'add_time': datetime.utcnow().isoformat(),
             'user': {
                 'email': 'qwerty@mail.ru',
-                'fam': 'Пупкин',
-                'name': 'Василий',
+                'fam': 'Ивнов',
+                'name': 'Иван',
                 'otc': 'Иванович',
-                'phone': '+7 555 55 55'
+                'phone': '+7 999 99 99'
             },
             'coords': {
-                'latitude': 45.3842,
-                'longitude': 7.1525,
-                'height': 1200
+                'latitude': 54.4656,
+                'longitude': 9.4577,
+                'height': 1500
             },
             'level': {
-                'winter': '2B',
+                'winter': '1A',
                 'summer': '1А',
                 'autumn': '1А',
-                'spring': '2B',
+                'spring': '2A',
             },
             'images': [
                 {
