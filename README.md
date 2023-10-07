@@ -1,6 +1,7 @@
 ___TRAVEL-API___
->SPRINT—02
-1.___Changed the database___
-2.___ADD Data acquisition tool___
-3.___ADD Data Updater___
-4.___ADD endpoint___
+>SPRINT—03
+1.ADD SWAGGER
+2.REFACTORING
+3.ADD TESTS
+4.FIX REQUIREMENTS
+5.FIX README

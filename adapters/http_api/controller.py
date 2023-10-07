@@ -2,7 +2,13 @@ from fastapi import APIRouter, Response, status
 
 from domain.service import MobileTourist
 from domain.interface import Repository
-from domain.dataclasses import BodyInfo
+from domain.dataclasses import  (
+	BodyInfo,
+	PerevalAddedResponse,
+	PerevalsByUserResponse,
+	PerevalByIdResponse,
+	PerevalUpdateResponse,
+)
 
 
 class Controller:
@@ -10,12 +16,14 @@ class Controller:
 		self.service = service
 		self.repository = repository
 		self.router = APIRouter()
-		self.router.add_api_route("/", self.test, methods=["GET"])
-		self.router.add_api_route("/submitData", self.submit_data_post, methods=["POST"])
-		self.router.add_api_route("/submitData", self.submit_data_get_all, methods=["GET"])
-		self.router.add_api_route("/submitData/{pereval_id}", self.submit_data_get, methods=["GET"])
-		self.router.add_api_route("/submitData/{pereval_id}", self.submit_data_patch, methods=["PATCH"])
-
+		self.router.add_api_route(
+			"/submitData", self.submit_data_post, methods=["POST"], response_model=PerevalAddedResponse)
+		self.router.add_api_route(
+			"/submitData", self.submit_data_get_all, methods=["GET"], response_model=PerevalsByUserResponse)
+		self.router.add_api_route(
+			"/submitData/{pereval_id}", self.submit_data_get, methods=["GET"], response_model=PerevalByIdResponse)
+		self.router.add_api_route(
+			"/submitData/{pereval_id}", self.submit_data_patch, methods=["PATCH"], response_model=PerevalUpdateResponse)
 	def submit_data_post(self, body: BodyInfo, response: Response):
 		try:
 			id_ = self.service.add_data(body=body)
@@ -90,6 +98,3 @@ class Controller:
 				"message": message,
 				"state": state
 			}
-
-	def test(self):
-		return {'test': 'success'}
